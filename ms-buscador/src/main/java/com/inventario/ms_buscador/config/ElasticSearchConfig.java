@@ -36,7 +36,7 @@ public class ElasticSearchConfig extends ElasticsearchConfiguration {
         HttpHeaders headers = new HttpHeaders();
         // Forzamos compatibilidad para evitar el error 400 en Bonsai
         headers.add("Accept", "application/vnd.elasticsearch+json;compatible-with=7");
-        headers.add("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7");
+       // headers.add("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7");
         headers.add("X-Elastic-Product", "Elasticsearch");
 
         return ClientConfiguration.builder()
