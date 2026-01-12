@@ -38,7 +38,7 @@ package com.inventario.ms_buscador.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
-@Document(indexName = "productos")
+@Document(indexName = "productos,createIndex = false")
 public class Product {
     @Id
     private String id;
