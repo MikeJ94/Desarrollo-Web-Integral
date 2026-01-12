@@ -39,3 +39,5 @@ eureka:
       defaultZone: http://eureka-server:8761/eureka/
   instance:
     prefer-ip-address: true
+    # Ayuda a identificar la instancia en el dashboard de Eureka
+    instance-id: ${spring.application.name}:${random.value}
