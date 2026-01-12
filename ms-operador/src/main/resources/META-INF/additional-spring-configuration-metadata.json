@@ -1,0 +1,17 @@
+{"properties": [
+  {
+    "name": "spring.cloud.stream.rabbit.default.producer.exchange-type",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.cloud.stream.rabbit.default.producer.exchange-type'"
+  },
+  {
+    "name": "spring.cloud.stream.function.definition",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.cloud.stream.function.definition'"
+  },
+  {
+    "name": "spring.cloud.stream.rabbit.default.consumer.exchange-type",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.cloud.stream.rabbit.default.consumer.exchange-type'"
+  }
+]}

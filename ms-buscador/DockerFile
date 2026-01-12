@@ -1,0 +1,14 @@
+# ETAPA 1: Compilación
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+WORKDIR /app
+# Copiamos el código fuente y el pom
+COPY . .
+# Compilamos el JAR dentro de Docker
+RUN mvn clean package -DskipTests
+
+# ETAPA 2: Ejecución
+FROM eclipse-temurin:17-jdk-focal
+WORKDIR /app
+# Copiamos el JAR generado en la etapa anterior
+COPY --from=build /app/target/*.jar app.jar
+ENTRYPOINT ["java","-Deureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/", "-jar", "app.jar"]

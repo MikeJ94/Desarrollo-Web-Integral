@@ -1,0 +1,159 @@
+version: '3.8'
+
+services:
+  # 1. SERVICIO DE DESCUBRIMIENTO (EUREKA SERVER)
+  eureka-server:
+    #image: springcloud/eureka:latest
+    # Usamos una imagen que sabemos que funciona con los manifiestos modernos de Docker
+    #image: netflixoss/eureka:latest
+    # Usamos una imagen de Eureka Server que es más moderna y confiable.
+    #image: springcloud/eureka-server:2.4.0
+    # Usamos una imagen de Eureka Server que es más moderna y confiable (Versión más estable y pública).
+    #image: digitalocean/eureka:latest
+    build:
+      context: ./ms-eureka # Ruta relativa a la carpeta del microservicio
+      dockerfile: DockerFile
+    container_name: eureka-server
+    hostname: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - inventario-network
+    restart: always
+
+  # 2. BASE DE DATOS (POSTGRESQL)
+  postgres_db:
+    image: postgres:16
+    container_name: postgres_container
+    hostname: postgres_container
+    ports:
+      #- "5432:5432"
+      - "5433:5432" #El puerto 5433 de mi PC física irá al 5432 interno del contenedor
+    environment:
+      # Las credenciales deben coincidir con ms-operador/application.yml
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Abc.123@
+      - POSTGRES_DB=inventarioapp
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - inventario-network
+    restart: always
+
+  # 3. MESSAGE BROKER (RABBITMQ)
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "5672:5672" # Puerto AMQP
+      - "15672:15672" # Puerto de interfaz web (http://localhost:15672)
+    environment:
+      - RABBITMQ_DEFAULT_USER=rabbit_user
+      - RABBITMQ_DEFAULT_PASS=rabbit_pass
+    networks:
+      - inventario-network
+    restart: always
+
+  # 4. MICROSERVICIO OPERADOR (ms-operador)
+  ms-operador:
+    # Construye la imagen usando el Dockerfile dentro de la carpeta ms-operador
+    build:
+      context: ./ms-operador # Ruta relativa a la carpeta del microservicio
+      dockerfile: DockerFile
+    container_name: ms-operador
+    hostname: ms-operador
+    ports:
+      - "8081:8081" # Puerto de la API REST del Operador
+    environment:
+      # Configuraciones de Eureka y RabbitMQ
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_container:5432/inventarioapp
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=Abc.123@
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=rabbit_user
+      - SPRING_RABBITMQ_PASSWORD=rabbit_pass
+    depends_on:
+      - eureka-server
+      - postgres_db
+      - rabbitmq
+    networks:
+      - inventario-network
+    restart: always
+  
+  # 5. API GATEWAY (ms-gateway)
+  ms-gateway:
+    build:
+      context: ./ms-gateway # Asegúrate de que este sea el nombre de tu carpeta
+      dockerfile: DockerFile
+    container_name: ms-gateway
+    hostname: ms-gateway
+    ports:
+      - "8082:8082" # El puerto público por el que entrarán todas las peticiones
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
+      # Si usas RabbitMQ para Refresh de config (opcional)
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=rabbit_user
+      - SPRING_RABBITMQ_PASSWORD=rabbit_pass
+    depends_on:
+      - eureka-server
+      - rabbitmq
+    networks:
+      - inventario-network
+    restart: always
+
+  # 6. MOTOR DE BÚSQUEDA (ELASTICSEARCH)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: elasticsearch
+    hostname: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # Límites de RAM para que no sature tu PC
+      - xpack.security.enabled=false     # Desactivamos seguridad para facilitar el desarrollo inicial
+    ports:
+      - "9200:9200" # Puerto para la API REST
+      - "9300:9300" # Puerto para comunicación entre nodos
+    networks:
+      - inventario-network
+    restart: always
+  
+  # 7. MICROSERVICIO BUSCADOR (ms-buscador)
+  ms-buscador:
+    build:
+      context: ./ms-buscador # Asegúrate de crear esta carpeta
+      dockerfile: DockerFile
+    container_name: ms-buscador
+    hostname: ms-buscador
+    ports:
+      - "8083:8083" # Puerto de la API REST del Buscador
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - SPRING_DATA_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=rabbit_user
+      - SPRING_RABBITMQ_PASSWORD=rabbit_pass
+      - SPRING_CLOUD_STREAM_BINDINGS_PRODUCTCONSUMERRMQ-IN-0_GROUP=buscador-group
+      - SPRING_CLOUD_STREAM_BINDINGS_PRODUCTCONSUMERRMQ-IN-0_DESTINATION=stock-updates-topic
+      - SPRING_CLOUD_FUNCTION_DEFINITION=productconsumerRMQ
+      - SERVER_PORT=8083
+    depends_on:
+      - eureka-server
+      - elasticsearch
+      - rabbitmq
+    networks:
+      - inventario-network
+    restart: always
+
+# Definición de Red y Volúmenes
+networks:
+  inventario-network:
+    driver: bridge
+
+volumes:
+  postgres-data:

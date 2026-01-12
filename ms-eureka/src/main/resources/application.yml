@@ -1,0 +1,10 @@
+server:
+  port: 8761 # Puerto estándar de Eureka
+spring:
+  application:
+    name: eureka-server
+eureka:
+  client:
+    # Indica que el servidor NO debe intentar registrarse a sí mismo ni buscar otros registros.
+    register-with-eureka: false 
+    fetch-registry: false

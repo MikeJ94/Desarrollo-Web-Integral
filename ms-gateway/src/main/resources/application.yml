@@ -1,0 +1,50 @@
+server:
+  port: 8082 # Puerto estándar para el punto de entrada
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    config:
+        enabled: false # Desactiva la búsqueda obligatoria del Config Server
+    gateway:
+      # --- Configuración de CORS para el Frontend (Tarea C1) ---
+      globalcors:
+        add-to-idm-strategy: true
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*" # Permite cualquier origen (ideal para desarrollo)
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            allowedHeaders: "*"
+
+      discovery:
+        locator:
+          enabled: true # Permite crear rutas basadas en servicios registrados en Eureka
+          # --- DEFINICIÓN DE RUTAS ---
+      routes:
+        - id: ms-productos-route  # Identificador único para la ruta
+          uri: lb://MS-OPERADOR # lb indica Load Balancer usando Eureka
+          predicates:
+            - Path=/api/productos/**, /api/ordenes/**, /api/suppliers/** # Todas las peticiones que empiecen así se redirigen
+        
+        # NUEVA RUTA: Microservicio Buscador (Elasticsearch)
+        - id: ms-buscador-route
+          uri: lb://MS-BUSCADOR
+          predicates:
+            - Path=/api/buscar/**
+
+# --- Configuración de Eureka (Tarea A1) ---
+eureka:
+  client:
+    serviceUrl:
+      # Apunta al contenedor de Eureka en tu docker-compose
+      defaultZone: http://eureka-server:8761/eureka/ 
+  instance:
+    prefer-ip-address: true
+    # Ayuda a identificar la instancia en el dashboard de Eureka
+    instance-id: ${spring.application.name}:${random.value}

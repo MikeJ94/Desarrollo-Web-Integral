@@ -1,0 +1,41 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: ms-buscador
+  
+  # Configuración de Elasticsearch
+  elasticsearch:
+    uris: http://elasticsearch:9200
+  
+  # Configuración de RabbitMQ (necesaria para que Cloud Stream sepa dónde está el broker)
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: rabbit_user
+    password: rabbit_pass
+
+  # Configuración de Mensajería (Cloud Stream)
+  cloud:
+    function:
+      definition: productconsumerRMQ
+    stream:
+      bindings:
+        productconsumerRMQ-in-0:
+          destination: stock-updates-topic
+          group: buscador-group
+          content-type: application/json
+      rabbit:
+        bindings:
+          productconsumerRMQ-in-0:
+            consumer:
+              exchange-type: topic
+
+# Configuración de Eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+  instance:
+    prefer-ip-address: true

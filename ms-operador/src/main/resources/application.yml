@@ -1,0 +1,78 @@
+server:
+  port: 8081 # Puerto único para el Operador
+
+spring:
+  application:
+    name: ms-operador # Nombre de servicio para Eureka
+  
+  # --- Configuración de Base de Datos (Tarea B1) ---
+  datasource:
+    # Ajusta esta URL para el contenedor de PostgreSQL en tu docker-compose
+    url: jdbc:postgresql://postgres_container:5432/inventarioapp 
+    username: postgres
+    password: Abc.123@
+    driver-class-name: org.postgresql.Driver
+    # Añade esta línea para que falle si no conecta a la DB real
+    type: com.zaxxer.hikari.HikariDataSource
+  jpa:
+    hibernate:
+      ddl-auto: update # Usar 'update' para que cree/actualice las tablas automáticamente
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  # 2. Configuración de RabbitMQ (Conexión básica)
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: rabbit_user
+    password: rabbit_pass
+
+  # --- Configuración de Mensajería Asíncrona (Tarea B4) ---
+  # cloud:
+  #   stream: # Aquí va el nombre de tu Supplier o Bean de mensajes
+  #     bindings:  # Define un canal de salida para las actualizaciones de stock
+  #       stock-updates-out-0: # El '-0' es estándar en Spring Cloud Stream 
+  #         destination: stock-updates-topic # El nombre del topic/cola en RabbitMQ/Kafka
+  #         content-type: application/json
+  #     rabbit:
+  #       #bindings:
+  #         #stock-updates-out-0:
+  #         default:
+  #           producer:
+  #             exchangeType: topic # Tipo de intercambio en RabbitMQ
+
+  # --- Configuración de Mensajería Asíncrona (Tareas B4 y B5) ---
+  cloud:
+    stream:
+      #function:
+        # Declaramos la función del Consumer que creamos en Java
+        #definition: stockUpdateConsumer 
+      bindings:
+        # Canal de SALIDA (Producer) - Usado por StreamBridge en tu Service
+        stock-updates-out: 
+          destination: stock-updates-topic
+          content-type: application/json
+        
+        # Canal de ENTRADA (Consumer) - Vinculado a la función stockUpdateConsumer
+        # stockUpdateConsumer-in-0:
+        #   destination: stock-updates-topic
+        #   group: inventario-group # El 'group' asegura que la cola sea persistente
+
+      rabbit:
+        default:
+          producer:
+            exchangeType: topic
+          # consumer:
+          #   exchange-type: topic
+
+# --- Configuración de Eureka (Tarea A1) ---
+eureka:
+  client:
+    serviceUrl:
+      # Apunta al contenedor de Eureka en tu docker-compose
+      defaultZone: http://eureka-server:8761/eureka/ 
+  instance:
+    prefer-ip-address: true
+    # Ayuda a identificar la instancia en el dashboard de Eureka
+    instance-id: ${spring.application.name}:${random.value}

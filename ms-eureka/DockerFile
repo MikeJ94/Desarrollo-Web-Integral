@@ -1,0 +1,16 @@
+#FROM eclipse-temurin:17-jdk-focal
+#ARG JAR_FILE=target/*.jar
+#COPY ${JAR_FILE} app.jar
+#ENTRYPOINT ["java","-jar","/app.jar"]
+
+# ETAPA 1: Compilación
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
+
+# ETAPA 2: Ejecución
+FROM eclipse-temurin:17-jdk-focal
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
