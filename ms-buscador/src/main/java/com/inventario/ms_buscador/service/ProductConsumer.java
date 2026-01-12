@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 @Configuration
 public class ProductConsumer {
 
-    @Autowired
+    @Autowired(required = false)
     private ProductRepository productRepository;
 
     @Bean
