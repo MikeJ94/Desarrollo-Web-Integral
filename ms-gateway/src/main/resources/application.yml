@@ -14,13 +14,17 @@ spring:
         add-to-idm-strategy: true
         corsConfigurations:
           '[/**]':
-            allowedOrigins: "*" # Permite cualquier origen (ideal para desarrollo)
+            allowedOrigins: 
+            #-"*" # Permite cualquier origen (ideal para desarrollo)
+            - "https://dwifront.vercel.app"
+            - "http://localhost:5173"
             allowedMethods:
               - GET
               - POST
               - PUT
               - DELETE
             allowedHeaders: "*"
+            allowCredentials: true
 
       discovery:
         locator:
