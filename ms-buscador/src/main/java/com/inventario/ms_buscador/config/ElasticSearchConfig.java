@@ -27,25 +27,29 @@ public class ElasticSearchConfig extends ElasticsearchConfiguration {
     @Override
     @NonNull
     public ClientConfiguration clientConfiguration() {
-        String targetHost = uris.replace("https://", "").replace("http://", "").split("/")[0];
-        
-        if (!targetHost.contains(":") && uris.contains("https")) {
-            targetHost += ":443";
-        }
+    // 1. Limpiar el host (quitar https:// y / al final)
+    String cleanUri = uris.replace("https://", "").replace("http://", "");
+    if (cleanUri.endsWith("/")) {
+        cleanUri = cleanUri.substring(0, cleanUri.length() - 1);
+    }
+    
+    // 2. Asegurar el puerto 443 para Bonsai SSL
+    if (!cleanUri.contains(":")) {
+        cleanUri += ":443";
+    }
 
-        HttpHeaders headers = new HttpHeaders();
-        // Forzamos compatibilidad para evitar el error 400 en Bonsai
-        headers.add("Accept", "application/vnd.elasticsearch+json;compatible-with=7");
-       // headers.add("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7");
-        headers.add("X-Elastic-Product", "Elasticsearch");
+    // 3. Headers de compatibilidad
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Accept", "application/vnd.elasticsearch+json;compatible-with=7");
+    headers.add("X-Elastic-Product", "Elasticsearch");
 
-        return ClientConfiguration.builder()
-                .connectedTo(targetHost)
-                .usingSsl()
-                .withBasicAuth(username, password)
-                .withHeaders(() -> headers)
-                .withConnectTimeout(Duration.ofSeconds(10))
-                .withSocketTimeout(Duration.ofSeconds(10))
-                .build();
+    return ClientConfiguration.builder()
+            .connectedTo(cleanUri)
+            .usingSsl()
+            .withBasicAuth(username, password)
+            .withHeaders(() -> headers)
+            .withConnectTimeout(Duration.ofSeconds(20))
+            .withSocketTimeout(Duration.ofSeconds(20))
+            .build();
     }
 }
