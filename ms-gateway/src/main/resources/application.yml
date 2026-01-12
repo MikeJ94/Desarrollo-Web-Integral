@@ -16,7 +16,7 @@ spring:
           '[/**]':
             allowedOrigins: 
             #-"*" # Permite cualquier origen (ideal para desarrollo)
-            - "https://dwifront.vercel.app"
+            - "https://dwi-act2.vercel.app"
             - "http://localhost:5173"
             allowedMethods:
               - GET
@@ -34,8 +34,9 @@ spring:
         - id: ms-productos-route  # Identificador único para la ruta
           uri: lb://MS-OPERADOR # lb indica Load Balancer usando Eureka
           predicates:
-            - Path=/api/productos/**, /api/ordenes/**, /api/suppliers/** # Todas las peticiones que empiecen así se redirigen
-        
+           # - Path=/api/productos/**, /api/ordenes/**, /api/suppliers/** # Todas las peticiones que empiecen así se redirigen
+            - Path=/productos/**, /api/ordenes/**, /api/suppliers/** # Todas las peticiones que empiecen así se redirigen
+
         # NUEVA RUTA: Microservicio Buscador (Elasticsearch)
         - id: ms-buscador-route
           uri: lb://MS-BUSCADOR
