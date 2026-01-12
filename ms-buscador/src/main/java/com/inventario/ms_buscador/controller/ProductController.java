@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-//@RestController
+@RestController
 @RequestMapping("/api/buscar")
 @CrossOrigin(origins = "*") // Para evitar problemas de CORS durante pruebas
 public class ProductController {
 
-    @Autowired(required = false)
+    @Autowired
     private ProductRepository repository;
 
     // 1. Ver todos los productos indexados

@@ -1,50 +1,26 @@
-/* package com.inventario.ms_buscador.model;
+package com.inventario.ms_buscador.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import lombok.*;
 
-@Document(indexName = "products") // Nombre del índice en Elasticsearch
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Product {
-
-    @Id
-    private String id; // En Elastic es recomendable usar String para el ID
-
-    @Field(type = FieldType.Long)
-    private Long idSupplier;
-
-    // Usamos 'nombre' para que coincida con tu JSON del operador
-    // El analyzer "search_as_you_type" es para sugerencias instantáneas
-    @Field(type = FieldType.Text, analyzer = "standard")
-    private String nombre;
-
-    // IMPORTANTE: Keyword permite hacer agregaciones (Facets)
-    @Field(type = FieldType.Keyword)
-    private String categoria;
-
-    @Field(type = FieldType.Integer)
-    private Integer stock;
-} */
-
-
-package com.inventario.ms_buscador.model;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-
-@Document(indexName = "productos,createIndex = false")
+// Quitamos el 'createIndex = false' de aquí, eso se maneja en el Repository o Config
+@Document(indexName = "productos") 
 public class Product {
     @Id
     private String id;
+    
+    @Field(type = FieldType.Long)
     private Long idSupplier;
+    
+    @Field(type = FieldType.Text)
     private String nombre;
+    
+    @Field(type = FieldType.Keyword)
     private String categoria;
+    
+    @Field(type = FieldType.Integer)
     private Integer stock;
 
     public Product() {}
@@ -61,7 +37,7 @@ public class Product {
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
 
-    // Simulación de Builder manual para que ProductConsumer compile
+    // Builder manual para compatibilidad con el Consumer
     public static ProductBuilder builder() {
         return new ProductBuilder();
     }
