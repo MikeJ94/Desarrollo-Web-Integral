@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-@RestController
+//@RestController
 @RequestMapping("/api/buscar")
 @CrossOrigin(origins = "*") // Para evitar problemas de CORS durante pruebas
 public class ProductController {
