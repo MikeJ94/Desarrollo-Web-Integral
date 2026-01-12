@@ -6,7 +6,6 @@ import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.lang.NonNull;
-import java.net.URI;
 
 @Configuration
 public class ElasticSearchConfig extends ElasticsearchConfiguration {
@@ -23,23 +22,22 @@ public class ElasticSearchConfig extends ElasticsearchConfiguration {
     @Override
     @NonNull
     public ClientConfiguration clientConfiguration() {
-        // USAMOS URI PARA EXTRAER EL HOST Y PUERTO CORRECTAMENTE
-        URI uri = URI.create(uris);
-        String host = uri.getHost();
-        int port = uri.getPort();
+        // Limpieza manual y segura para Bonsai
+        // Quitamos el protocolo y cualquier diagonal final
+        String cleanAddress = uris.replace("https://", "")
+                                  .replace("http://", "")
+                                  .replace("/", "");
 
-        // Si el puerto no viene en la URL (Bonsai usa 443 para https)
-        if (port == -1) {
-            port = uris.startsWith("https") ? 443 : 80;
+        // Bonsai siempre corre en el puerto 443 para HTTPS si no se especifica
+        if (!cleanAddress.contains(":")) {
+            cleanAddress += ":443";
         }
-
-        String finalAddress = host + ":" + port;
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Elastic-Product", "Elasticsearch");
 
         return ClientConfiguration.builder()
-                .connectedTo(finalAddress) // Esto enviará "host.bonsai.net:443"
+                .connectedTo(cleanAddress)
                 .usingSsl()
                 .withBasicAuth(username, password)
                 .withHeaders(() -> headers)
