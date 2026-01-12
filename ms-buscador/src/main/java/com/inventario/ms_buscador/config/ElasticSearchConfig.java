@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 @Configuration
 public class ElasticSearchConfig extends ElasticsearchConfiguration {
 
-    @Value("${spring.elasticsearch.uris}")
+    @Value("${spring.elasticsearch.uris:http://localhost:9200}")
     private String uris;
 
     @Value("${spring.elasticsearch.username}")
