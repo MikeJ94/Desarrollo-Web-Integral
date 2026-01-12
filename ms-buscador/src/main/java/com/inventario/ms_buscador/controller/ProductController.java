@@ -14,7 +14,7 @@ import java.util.stream.StreamSupport;
 @CrossOrigin(origins = "*") // Para evitar problemas de CORS durante pruebas
 public class ProductController {
 
-    @Autowired
+    @Autowired(required = false)
     private ProductRepository repository;
 
     // 1. Ver todos los productos indexados
