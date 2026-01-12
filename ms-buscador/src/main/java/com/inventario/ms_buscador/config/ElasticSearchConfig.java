@@ -10,37 +10,42 @@ import org.springframework.lang.NonNull;
 @Configuration
 public class ElasticSearchConfig extends ElasticsearchConfiguration {
 
-    @Value("${spring.elasticsearch.uris}")
+    @Value("${spring.elasticsearch.uris:}")
     private String uris;
 
-    @Value("${spring.elasticsearch.username}")
+    @Value("${spring.elasticsearch.username:}")
     private String username;
 
-    @Value("${spring.elasticsearch.password}")
+    @Value("${spring.elasticsearch.password:}")
     private String password;
 
     @Override
     @NonNull
     public ClientConfiguration clientConfiguration() {
-        // Limpieza manual y segura para Bonsai
-        // Quitamos el protocolo y cualquier diagonal final
-        String cleanAddress = uris.replace("https://", "")
-                                  .replace("http://", "")
-                                  .replace("/", "");
-
-        // Bonsai siempre corre en el puerto 443 para HTTPS si no se especifica
-        if (!cleanAddress.contains(":")) {
-            cleanAddress += ":443";
+        System.out.println("DEBUG: Intentando conectar a: " + uris);
+        
+        // Si la variable está vacía, usamos un fallback para que no explote con null
+        String targetHost = "localhost:9200";
+        
+        if (uris != null && !uris.isEmpty()) {
+            targetHost = uris.replace("https://", "").replace("http://", "").split("/")[0];
+            if (!targetHost.contains(":") && uris.contains("https")) {
+                targetHost += ":443";
+            }
         }
+
+        System.out.println("DEBUG: Host final procesado: " + targetHost);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Elastic-Product", "Elasticsearch");
 
         return ClientConfiguration.builder()
-                .connectedTo(cleanAddress)
+                .connectedTo(targetHost)
                 .usingSsl()
                 .withBasicAuth(username, password)
                 .withHeaders(() -> headers)
+                .withConnectTimeout(10000) // 10 segundos
+                .withSocketTimeout(10000)
                 .build();
     }
 }
