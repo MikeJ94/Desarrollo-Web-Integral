@@ -4,7 +4,7 @@ import axios from 'axios';
 //const API_BASE_URL = "http://localhost:8082/api";
 
 // Después (Formato Vite):
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8082";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8082";
 
 const inventoryApi = axios.create({
     baseURL: API_BASE_URL,
